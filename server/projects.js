@@ -513,17 +513,11 @@ async function isProjectEmpty(projectName) {
   }
 }
 
-// Delete an empty project
+// Delete a project
 async function deleteProject(projectName) {
   const projectDir = path.join(process.env.HOME, '.claude', 'projects', projectName);
   
   try {
-    // First check if the project is empty
-    const isEmpty = await isProjectEmpty(projectName);
-    if (!isEmpty) {
-      throw new Error('Cannot delete project with existing sessions');
-    }
-    
     // Remove the project directory
     await fs.rm(projectDir, { recursive: true, force: true });
     
