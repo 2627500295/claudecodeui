@@ -1143,6 +1143,8 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
   const [slashPosition, setSlashPosition] = useState(-1);
   const [visibleMessageCount, setVisibleMessageCount] = useState(100);
   const [claudeStatus, setClaudeStatus] = useState(null);
+  const [selectedModel, setSelectedModel] = useState('sonnet');
+  const [thinkingMode, setThinkingMode] = useState('auto');
 
 
   // Memoized diff calculation to prevent recalculating on every render
@@ -2057,6 +2059,8 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
         resume: !!currentSessionId,
         toolsSettings: toolsSettings,
         permissionMode: permissionMode,
+        model: selectedModel,
+        thinkingMode: thinkingMode,
         images: uploadedImages // Pass images to backend
       }
     });
@@ -2223,6 +2227,20 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
     setPermissionMode(modes[nextIndex]);
   };
 
+  const handleModelChange = () => {
+    const models = ['sonnet', 'opus', 'haiku'];
+    const currentIndex = models.indexOf(selectedModel);
+    const nextIndex = (currentIndex + 1) % models.length;
+    setSelectedModel(models[nextIndex]);
+  };
+
+  const handleThinkingModeChange = () => {
+    const modes = ['auto', 'think', 'think_hard', 'think_harder', 'ultrathink'];
+    const currentIndex = modes.indexOf(thinkingMode);
+    const nextIndex = (currentIndex + 1) % modes.length;
+    setThinkingMode(modes[nextIndex]);
+  };
+
   // Don't render if no project is selected
   if (!selectedProject) {
     return (
@@ -2336,9 +2354,94 @@ function ChatInterface({ selectedProject, selectedSession, ws, sendMessage, mess
           onAbort={handleAbortSession}
         />
         
-        {/* Permission Mode Selector with scroll to bottom button - Above input, clickable for mobile */}
+        {/* Model Selection, Thinking Mode, and Permission Mode Selectors with scroll to bottom button - Above input, clickable for mobile */}
         <div className="max-w-4xl mx-auto mb-3">
           <div className="flex items-center justify-center gap-3">
+            {/* Model Selector */}
+            <button
+              type="button"
+              onClick={handleModelChange}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-all duration-200 ${
+                selectedModel === 'sonnet'
+                  ? 'bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 border-purple-300 dark:border-purple-600 hover:bg-purple-100 dark:hover:bg-purple-900/30'
+                  : selectedModel === 'opus'
+                  ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-600 hover:bg-amber-100 dark:hover:bg-amber-900/30'
+                  : 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-600 hover:bg-emerald-100 dark:hover:bg-emerald-900/30'
+              }`}
+              title="Click to change model"
+            >
+              <div className="flex items-center gap-2">
+                <div className={`w-2 h-2 rounded-full ${
+                  selectedModel === 'sonnet'
+                    ? 'bg-purple-500'
+                    : selectedModel === 'opus'
+                    ? 'bg-amber-500'
+                    : 'bg-emerald-500'
+                }`} />
+                <span>
+                  {selectedModel === 'sonnet' && 'Sonnet'}
+                  {selectedModel === 'opus' && 'Opus'}
+                  {selectedModel === 'haiku' && 'Haiku'}
+                </span>
+              </div>
+            </button>
+
+            {/* Thinking Mode Selector */}
+            <button
+              type="button"
+              onClick={handleThinkingModeChange}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-all duration-200 ${
+                thinkingMode === 'auto'
+                  ? 'bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600'
+                  : thinkingMode === 'think'
+                  ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/30'
+                  : thinkingMode === 'think_hard'
+                  ? 'bg-cyan-50 dark:bg-cyan-900/20 text-cyan-700 dark:text-cyan-300 border-cyan-300 dark:border-cyan-600 hover:bg-cyan-100 dark:hover:bg-cyan-900/30'
+                  : thinkingMode === 'think_harder'
+                  ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 border-indigo-300 dark:border-indigo-600 hover:bg-indigo-100 dark:hover:bg-indigo-900/30'
+                  : 'bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 border-purple-300 dark:border-purple-600 hover:bg-purple-100 dark:hover:bg-purple-900/30'
+              }`}
+              title="Click to change thinking mode"
+            >
+              <div className="flex items-center gap-2">
+                <div className={`flex items-center gap-0.5 ${
+                  thinkingMode === 'auto'
+                    ? 'text-gray-500'
+                    : thinkingMode === 'think'
+                    ? 'text-blue-500'
+                    : thinkingMode === 'think_hard'
+                    ? 'text-cyan-500'
+                    : thinkingMode === 'think_harder'
+                    ? 'text-indigo-500'
+                    : 'text-purple-500'
+                }`}>
+                  <div className={`w-1 h-2 rounded-full ${
+                    thinkingMode === 'auto' ? 'bg-gray-400' : 'bg-current'
+                  }`} />
+                  <div className={`w-1 h-3 rounded-full ${
+                    ['think', 'think_hard', 'think_harder', 'ultrathink'].includes(thinkingMode) ? 'bg-current' : 'bg-gray-300'
+                  }`} />
+                  <div className={`w-1 h-3.5 rounded-full ${
+                    ['think_hard', 'think_harder', 'ultrathink'].includes(thinkingMode) ? 'bg-current' : 'bg-gray-300'
+                  }`} />
+                  <div className={`w-1 h-4 rounded-full ${
+                    ['think_harder', 'ultrathink'].includes(thinkingMode) ? 'bg-current' : 'bg-gray-300'
+                  }`} />
+                  <div className={`w-1 h-5 rounded-full ${
+                    thinkingMode === 'ultrathink' ? 'bg-current' : 'bg-gray-300'
+                  }`} />
+                </div>
+                <span>
+                  {thinkingMode === 'auto' && 'Auto'}
+                  {thinkingMode === 'think' && 'Think'}
+                  {thinkingMode === 'think_hard' && 'Think Hard'}
+                  {thinkingMode === 'think_harder' && 'Think Harder'}
+                  {thinkingMode === 'ultrathink' && 'UltraThink'}
+                </span>
+              </div>
+            </button>
+
+            {/* Permission Mode Selector */}
             <button
               type="button"
               onClick={handleModeSwitch}
